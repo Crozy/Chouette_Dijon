@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { LayerKey } from '../../settings'
 import { CalendarDays, CloudSun, Newspaper, RadioTower, SlidersHorizontal, TramFront, TriangleAlert, type LucideIcon } from 'lucide-react'
 
 /** Panneaux affichables par-dessus la carte (un seul à la fois). */
@@ -23,6 +24,27 @@ export const PANEL_TITLES: Record<FixedPanel, string> = {
 }
 
 const PANELS = Object.keys(PANEL_TITLES) as FixedPanel[]
+
+/**
+ * Couches mises en avant par chaque section du rail.
+ * - `only` : la carte se concentre sur le sujet (les autres couches sont masquées) ;
+ * - `add`  : les couches sont ajoutées à ce qui est déjà affiché.
+ * Les filtres en haut de la carte permettent toujours d'ajouter d'autres couches ensuite.
+ * Sections sans contenu géographique (actus, météo, infos) : la carte ne change pas.
+ */
+export const SECTION_LAYERS: Partial<Record<FixedPanel | 'lieu', { mode: 'only' | 'add'; layers: LayerKey[] }>> = {
+  transports: { mode: 'only', layers: ['train', 'tram', 'bus', 'velo', 'flixbus', 'blablacar'] },
+  antennes: { mode: 'only', layers: ['antennas'] },
+  agenda: { mode: 'only', layers: ['culture'] },
+  lieu: { mode: 'add', layers: ['culture'] },
+  gare: { mode: 'add', layers: ['train'] },
+  cars: { mode: 'add', layers: ['flixbus'] },
+}
+
+export function sectionLayers(p: PanelId | null) {
+  if (!p) return undefined
+  return SECTION_LAYERS[p.startsWith('lieu:') ? 'lieu' : (p as FixedPanel)]
+}
 
 export function panelTitle(p: PanelId) {
   return p.startsWith('lieu:') ? 'Programmation' : PANEL_TITLES[p as FixedPanel]

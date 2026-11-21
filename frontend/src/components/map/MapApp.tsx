@@ -15,7 +15,7 @@ import {
   CENTER, FILTERS, STOP_LAYERS, TRAFFIC_COLORS, addAntennas, addCrowd, addLines, addStops, addTraffic, applyAntennaState, applyLineState,
   applyOverlayState, styleUrl, type RouteRef,
 } from './layers'
-import { UI, useIsMobile, type PanelId } from './nav'
+import { UI, sectionLayers, useIsMobile, type PanelId } from './nav'
 import { TopBar } from './TopBar'
 import { Rail } from './Rail'
 import { Panel } from './Panel'
@@ -270,9 +270,17 @@ export function MapApp({ panel, onPanel, onSettings }: {
     if (map && styleReady.current) applyAntennaState(map, layers.antennas, antennaFilter)
   }, [layers.antennas, antennaFilter])
 
-  // Ouvrir la section « Antennes » affiche la couche
+  // Ouvrir une section du rail met ses couches en avant (Transports → transports, Antennes → antennes…).
+  // Les filtres en haut de la carte restent disponibles pour ajouter d'autres couches ensuite.
   useEffect(() => {
-    if (panel === 'antennes' && !layers.antennas) update({ layers: { ...layers, antennas: true } })
+    const preset = sectionLayers(panel)
+    if (!preset) return
+    const next = { ...layers }
+    for (const k of Object.keys(next) as LayerKey[]) {
+      if (preset.layers.includes(k)) next[k] = true
+      else if (preset.mode === 'only') next[k] = false
+    }
+    if ((Object.keys(next) as LayerKey[]).some((k) => next[k] !== layers[k])) update({ layers: next })
   }, [panel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- Arrêts de tram et de bus
