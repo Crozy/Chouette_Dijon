@@ -26,8 +26,8 @@ export default function App() {
   }, [route])
 
   useEffect(() => {
-    document.title = route.view === 'settings' ? 'Paramètres · DIJON HUB'
-      : route.panel ? `${panelTitle(route.panel)} · DIJON HUB` : 'DIJON HUB'
+    document.title = route.view === 'settings' ? 'Paramètres · Chouette Dijon'
+      : route.panel ? `${panelTitle(route.panel)} · Chouette Dijon` : 'Chouette Dijon'
   }, [route])
 
   const go = useCallback((r: Route) => { window.location.hash = hashFor(r) }, [])

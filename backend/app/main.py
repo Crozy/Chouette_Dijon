@@ -1,4 +1,4 @@
-"""DIJON HUB — API FastAPI."""
+"""Chouette Dijon — API FastAPI."""
 import asyncio
 import logging
 from contextlib import asynccontextmanager
@@ -25,7 +25,7 @@ async def lifespan(_: FastAPI):
     await http.close()
 
 
-app = FastAPI(title="DIJON HUB API", version="1.0.0", description="La métropole en temps réel", lifespan=lifespan)
+app = FastAPI(title="Chouette Dijon API", version="1.0.0", description="La métropole en temps réel", lifespan=lifespan)
 
 settings = get_settings()
 app.add_middleware(

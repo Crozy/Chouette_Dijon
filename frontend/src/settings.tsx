@@ -18,13 +18,15 @@ const DEFAULTS: Settings = {
   // Affichage sobre par défaut : l'essentiel (trams, gares, salles) ; le reste s'active depuis les filtres
   layers: { train: true, tram: true, bus: false, velo: false, flixbus: true, blablacar: false, culture: true, antennas: false, traffic: false, crowd: false },
 }
-const KEY = 'dijonhub.settings'
+const KEY = 'chouette-dijon.settings'
+/** Ancienne clé (« DIJON HUB ») : relue une fois pour conserver les réglages existants. */
+const OLD_KEY = 'dijonhub.settings'
 /** À incrémenter quand les couches par défaut changent : les anciens choix enregistrés sont alors réinitialisés. */
 const LAYERS_VERSION = 2
 
 function load(): Settings {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) || '{}')
+    const raw = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem(OLD_KEY) || '{}')
     // Paramètres d'URL prioritaires (?skin=tech&mode=light) — pratique pour un écran en mode kiosque
     const q = new URLSearchParams(window.location.search)
     const skin = q.get('skin')

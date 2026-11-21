@@ -1,4 +1,4 @@
-# DIJON HUB — la métropole en temps réel
+# Chouette Dijon — la métropole en temps réel
 
 Tableau de bord web temps réel pour la métropole de Dijon : transports (Divia, Vélodi, gare SNCF, gare routière, covoiturage), actualités locales, météo et qualité de l'air, agenda culturel et sportif, alertes et numéros utiles.
 

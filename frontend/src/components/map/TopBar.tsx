@@ -67,7 +67,7 @@ export function TopBar({ mobile, onWeather, onAlerts, onSettings }: {
           <span className="w-9 h-9 shrink-0 rounded-lg bg-accent/10 border border-accent/40 text-accent flex items-center justify-center"><HexLogo /></span>
         )}
         <div className="min-w-0 leading-none">
-          <h1 className={`m-0 truncate ${mobile ? 'sr-only' : skin === 'bourgogne' ? 'font-display text-[21px] font-bold tracking-[0.08em]' : 'font-display text-base font-bold tracking-[0.12em]'}`}>DIJON HUB</h1>
+          <h1 className={`m-0 truncate ${mobile ? 'sr-only' : skin === 'bourgogne' ? 'font-display text-[21px] font-bold tracking-[0.03em]' : 'font-display text-base font-bold tracking-[0.06em]'}`}>Chouette Dijon</h1>
           {!mobile && <div className={skin === 'bourgogne' ? 'font-display italic text-[13px] text-accent mt-0.5' : 'text-[11px] text-muted mt-0.5'}>La métropole en temps réel</div>}
         </div>
       </div>

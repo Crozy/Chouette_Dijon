@@ -15,7 +15,7 @@ export function SettingsShell({ onBack, children }: { onBack: () => void; childr
           ) : (
             <span className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/40 text-accent flex items-center justify-center"><HexLogo /></span>
           )}
-          <span className={skin === 'bourgogne' ? 'font-display text-[24px] font-bold tracking-[0.08em]' : 'font-display text-lg font-bold tracking-[0.12em]'}>DIJON HUB</span>
+          <span className={skin === 'bourgogne' ? 'font-display text-[24px] font-bold tracking-[0.03em]' : 'font-display text-lg font-bold tracking-[0.06em]'}>Chouette Dijon</span>
         </div>
         <button type="button" onClick={onBack}
           className="flex items-center gap-2 h-11 px-4 rounded-xl bg-accent text-on-accent text-sm font-semibold">

@@ -66,7 +66,7 @@ export function SettingsPage() {
                     <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: skin === 'bourgogne' ? '#E0A526' : 'transparent', color: skin === 'bourgogne' ? '#2A1218' : p.accent }}>
                       {skin === 'bourgogne' ? <Owl size={18} /> : <HexLogo size={18} />}
                     </span>
-                    <span style={{ fontFamily: p.font, fontWeight: 700, fontSize: skin === 'bourgogne' ? 20 : 15, letterSpacing: '0.08em' }}>DIJON HUB</span>
+                    <span style={{ fontFamily: p.font, fontWeight: 700, fontSize: skin === 'bourgogne' ? 20 : 15, letterSpacing: '0.03em' }}>Chouette Dijon</span>
                   </div>
                   {skin === 'bourgogne' && <div className="h-1.5 rounded" style={{ background: 'repeating-linear-gradient(90deg,#D9A21B 0 12px,#2F6B4F 12px 24px,#D9A21B 24px 36px,#141010 36px 48px)' }} />}
                   <div className="grid grid-cols-3 gap-1.5">

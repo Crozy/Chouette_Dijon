@@ -127,7 +127,8 @@ async def fetch_registry() -> tuple[list[dict], bool]:
         except Exception as exc:  # noqa: BLE001
             log.warning("Registre ANFR injoignable : %s", exc)
     if path.exists():
-        return json.loads(path.read_text()), True
+        # Cache encore valide (< 24 h) : normal. Cache plus ancien : l'ANFR n'a pas répondu.
+        return json.loads(path.read_text()), not fresh
     raise RuntimeError("Registre ANFR indisponible et aucun cache")
 
 

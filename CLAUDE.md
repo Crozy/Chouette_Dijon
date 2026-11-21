@@ -1,4 +1,4 @@
-# CLAUDE.md — consignes pour travailler sur DIJON HUB
+# CLAUDE.md — consignes pour travailler sur Chouette Dijon
 
 Présentation, installation, sources de données et API : voir `README.md`. Ce fichier ne contient que les règles de travail.
 

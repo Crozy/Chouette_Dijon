@@ -5,7 +5,7 @@ from app.config import get_settings
 
 _client: httpx.AsyncClient | None = None
 
-USER_AGENT = "DijonHub/1.0 (+https://github.com/; tableau de bord open source)"
+USER_AGENT = "ChouetteDijon/1.0 (tableau de bord open source, Dijon)"  # ASCII uniquement : en-tête HTTP
 
 
 def client() -> httpx.AsyncClient:
