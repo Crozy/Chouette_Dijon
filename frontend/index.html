@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr" data-skin="bourgogne" data-mode="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DIJON HUB — la métropole en temps réel" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500&display=swap" />
+    <title>DIJON HUB</title>
+    <script>
+      // Applique le thème sauvegardé avant le premier rendu (évite le flash)
+      try {
+        var s = JSON.parse(localStorage.getItem('dijonhub.settings') || '{}');
+        if (s.skin) document.documentElement.dataset.skin = s.skin;
+        if (s.mode) document.documentElement.dataset.mode = s.mode;
+        var q = new URLSearchParams(location.search);
+        if (q.get('skin')) document.documentElement.dataset.skin = q.get('skin');
+        if (q.get('mode')) document.documentElement.dataset.mode = q.get('mode');
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - gtfs-cache:/app/data   # cache disque du GTFS statique Divia
+    expose:
+      - "8000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${DIJONHUB_PORT:-8080}:80"
+
+volumes:
+  gtfs-cache:

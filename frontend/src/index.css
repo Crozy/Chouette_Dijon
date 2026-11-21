@@ -1,0 +1,224 @@
+@import 'maplibre-gl/dist/maplibre-gl.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Thèmes : <html data-skin="tech|bourgogne" data-mode="dark|light">
+ * Les couleurs sont des triplets RGB (utilisables avec l'opacité Tailwind : bg-accent/20).
+ */
+
+/* ---------- Skin « Control Center » ---------- */
+html[data-skin='tech'] {
+  --font-display: 'Space Grotesk', Inter, system-ui, sans-serif;
+  --font-body: Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --ds-page: 1;
+  --ds-card: 1;
+  --ds-big: 1;
+}
+html[data-skin='tech'][data-mode='dark'] {
+  color-scheme: dark;
+  --c-bg: 11 17 32;
+  --c-surface: 19 28 49;
+  --c-surface2: 15 23 42;
+  --c-line: 30 41 59;
+  --c-ink: 226 232 240;
+  --c-ink2: 203 213 225;
+  --c-muted: 148 163 184;
+  --c-accent: 34 211 238;
+  --c-accent-strong: 103 232 249;
+  --c-on-accent: 11 17 32;
+  --c-time: 253 230 138;
+  --c-boardhead: 15 26 51;
+  --c-boardhead-ink: 148 163 184;
+  --c-board: 10 19 40;
+  --c-board-alt: 12 22 45;
+  --c-live: 52 211 153;
+  --c-sim: 251 191 36;
+  --c-danger: 248 113 113;
+  --c-navactive: 22 34 61;
+  --c-ring: 36 64 107;
+  --c-tag: 196 181 253;
+  --c-rain: 59 130 246;
+  --c-emergency: 42 20 22;
+  --c-emergency-ink: 252 165 165;
+}
+html[data-skin='tech'][data-mode='light'] {
+  color-scheme: light;
+  --c-bg: 241 245 249;
+  --c-surface: 255 255 255;
+  --c-surface2: 248 250 252;
+  --c-line: 226 232 240;
+  --c-ink: 15 23 42;
+  --c-ink2: 51 65 85;
+  --c-muted: 71 85 105;
+  --c-accent: 8 145 178;
+  --c-accent-strong: 14 116 144;
+  --c-on-accent: 255 255 255;
+  --c-time: 146 64 14;
+  --c-boardhead: 226 232 240;
+  --c-boardhead-ink: 51 65 85;
+  --c-board: 255 255 255;
+  --c-board-alt: 248 250 252;
+  --c-live: 4 120 87;
+  --c-sim: 180 83 9;
+  --c-danger: 220 38 38;
+  --c-navactive: 224 242 254;
+  --c-ring: 125 211 252;
+  --c-tag: 109 40 217;
+  --c-rain: 37 99 235;
+  --c-emergency: 254 226 226;
+  --c-emergency-ink: 153 27 27;
+}
+
+/* ---------- Skin « Bourgogne » ---------- */
+html[data-skin='bourgogne'] {
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --ds-page: 1.42;
+  --ds-card: 1.35;
+  --ds-big: 1.2;
+}
+html[data-skin='bourgogne'][data-mode='dark'] {
+  color-scheme: dark;
+  --c-bg: 26 14 18;
+  --c-surface: 39 21 28;
+  --c-surface2: 31 16 21;
+  --c-line: 66 37 46;
+  --c-ink: 244 235 221;
+  --c-ink2: 230 216 198;
+  --c-muted: 196 177 162;
+  --c-accent: 224 165 38;
+  --c-accent-strong: 245 207 107;
+  --c-on-accent: 26 14 18;
+  --c-time: 242 193 78;
+  --c-boardhead: 94 26 44;
+  --c-boardhead-ink: 244 235 221;
+  --c-board: 29 14 19;
+  --c-board-alt: 35 17 26;
+  --c-live: 134 203 160;
+  --c-sim: 238 154 98;
+  --c-danger: 240 138 126;
+  --c-navactive: 68 32 44;
+  --c-ring: 122 90 30;
+  --c-tag: 235 168 186;
+  --c-rain: 110 159 198;
+  --c-emergency: 94 26 44;
+  --c-emergency-ink: 242 193 78;
+}
+html[data-skin='bourgogne'][data-mode='light'] {
+  color-scheme: light;
+  --c-bg: 246 240 230;
+  --c-surface: 255 253 248;
+  --c-surface2: 250 245 237;
+  --c-line: 228 214 195;
+  --c-ink: 42 18 24;
+  --c-ink2: 74 44 50;
+  --c-muted: 107 81 72;
+  --c-accent: 142 36 66;
+  --c-accent-strong: 110 24 50;
+  --c-on-accent: 255 253 248;
+  --c-time: 138 90 0;
+  --c-boardhead: 122 31 61;
+  --c-boardhead-ink: 255 247 235;
+  --c-board: 255 253 248;
+  --c-board-alt: 250 243 232;
+  --c-live: 47 107 79;
+  --c-sim: 166 77 26;
+  --c-danger: 185 28 28;
+  --c-navactive: 243 228 214;
+  --c-ring: 183 132 26;
+  --c-tag: 142 36 66;
+  --c-rain: 59 110 160;
+  --c-emergency: 122 31 61;
+  --c-emergency-ink: 255 236 200;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-body antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-accent));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-line rounded-2xl p-[18px] min-w-0;
+  }
+  .inner {
+    @apply bg-surface2 border border-line rounded-xl;
+  }
+  .t-page, .t-card, .t-big {
+    font-feature-settings: 'lnum' 1;
+    font-variant-numeric: lining-nums;
+  }
+  .t-page {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(28px * var(--ds-page));
+    line-height: 1.05;
+  }
+  .t-card {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: calc(16px * var(--ds-card));
+    line-height: 1.2;
+  }
+  .t-big {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-[13px] font-medium cursor-pointer transition-colors;
+  }
+  .pill-on {
+    @apply bg-accent/15 border-accent text-ink;
+  }
+  .pill-off {
+    @apply bg-surface border-line text-muted hover:text-ink;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 font-mono text-[11px] font-bold rounded-full px-2 py-0.5 border whitespace-nowrap;
+  }
+}
+
+/* ---------- Marqueurs de carte ---------- */
+.mk {
+  font: 700 11px var(--font-mono);
+  border: 2px solid rgb(var(--c-bg));
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+.mk:hover { transform: scale(1.12); }
+.mk-tram { background: none; border: 0; box-shadow: none; padding: 0; width: 30px; height: 35px; }
+.mk-tram-icon { display: block; width: 30px; height: 35px; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.45)); pointer-events: none; user-select: none; }
+.mk-tram-line { position: absolute; right: -9px; top: -4px; font-size: 9px; padding: 2px 4px; border-radius: 6px; border: 1.5px solid rgb(var(--c-bg)); }
+.mk-tram/* Épingle d'événement : la rotation est sur l'enfant (MapLibre positionne l'élément racine via transform) */
+.mk-event { cursor: pointer; background: none; border: 0; padding: 0 0 4px; }
+.mk-event-pin {
+  width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px;
+  border: 2px solid #fff; box-shadow: 0 2px 8px rgb(0 0 0 / 0.45);
+}
+.mk-event-pin > span { transform: rotate(45deg); line-height: 1; }
+/* Rangées défilantes horizontalement sans barre de défilement visible */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+/* Salles & lieux (programmation) */
+.mk-venue { display: flex; align-items: center; gap: 4px; border-radius: 999px; padding: 4px 8px 4px 6px; color: #fff; font-size: 11px; }
+.mk-venue b { font-weight: 800; }
+.mk-selected { box-shadow: none; }
+.mk-tram.mk-selected .mk-tram-icon { filter: drop-shadow(0 0 3px rgb(var(--c-accent))) drop-shadow(0 0 3px rgb(var(--c-accent))); }
+.mk-bus { border-radius: 999px; min-width: 26px; height: 26px; padding: 0 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.mk-velo { border-radius: 999px; padding: 3px 7px; background: rgb(var(--c-bg)); border-width: 2px; }
+.mk-poi { border-radius: 6px; padding: 5px 7px; }
+.mk-selected { box-shadow: 0 0 0 3px rgb(var(--c-accent) / 0.75); }
+.maplibregl-ctrl-attrib { font-size: 10px; }
