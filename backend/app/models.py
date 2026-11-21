@@ -58,6 +58,44 @@ class TransitStop(BaseModel):
     wheelchair: bool = False
 
 
+class AntennaOperator(BaseModel):
+    name: str  # Orange, SFR, Bouygues Telecom, Free
+    generations: list[str]  # 2G, 3G, 4G, 5G
+    systems: list[str]  # ex. « LTE 2100 », « 5G NR 3500 »
+    status: Optional[str] = None  # En service / Techniquement opérationnel / Projet approuvé
+    latest: Optional[str] = None  # date de mise en service la plus récente (AAAA-MM-JJ)
+
+
+class AntennaOutage(BaseModel):
+    operator: str
+    kind: Literal["incident", "maintenance"]
+    voice: Optional[str] = None  # OK / HS
+    data: Optional[str] = None
+    techs: dict[str, str] = {}  # voix2g, data4g… -> OK / HS
+    detail: Optional[str] = None
+    start: Optional[str] = None
+    end: Optional[str] = None
+    commune: Optional[str] = None
+
+
+class AntennaStation(BaseModel):
+    id: str  # n° de station ANFR
+    lat: float
+    lon: float
+    height: Optional[float] = None
+    address: Optional[str] = None
+    postcode: Optional[str] = None
+    insee: Optional[str] = None
+    operators: list[AntennaOperator]
+    outages: list[AntennaOutage] = []
+
+
+class AntennaData(BaseModel):
+    stations: list[AntennaStation]
+    registry_date: Optional[str] = None  # date du registre ANFR
+    outages_date: Optional[str] = None  # date du fichier de pannes Arcep
+
+
 class TrafficInfo(BaseModel):
     mode: Literal["live", "estimated"]
     level: float  # congestion globale estimée selon l'heure (0 = fluide, 1 = très chargé)

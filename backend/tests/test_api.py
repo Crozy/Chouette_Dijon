@@ -195,3 +195,29 @@ def test_venue_programme_parsers(monkeypatch):
     assert z.title == "FOREVER 90’S" and z.image == "https://z/i.jpg" and z.ticket == "https://z/t"
     d = asyncio.run(vp.fetch_dfco(now))
     assert len(d) == 1 and d[0].title == "DFCO – Sochaux" and d[0].image == "https://l/272.png"
+
+
+def test_antennas_grouping_and_outages():
+    """Regroupement des émetteurs ANFR par station, rayon autour de Dijon, correspondance des pannes Arcep."""
+    from app.services import antennas as a
+    recs = [
+        {"sta_nm_anfr": "0212750525", "adm_lb_nom": "BOUYGUES TELECOM", "generation": "4G", "emr_lb_systeme": "LTE 800",
+         "coordonnees": "47.3200 , 5.0400", "statut": "En service", "sup_nm_haut": "30,5", "date_maj": "2026-10-29T15:15:25"},
+        {"sta_nm_anfr": "0212750525", "adm_lb_nom": "BOUYGUES TELECOM", "generation": "5G", "emr_lb_systeme": "5G NR 3500",
+         "coordonnees": "47.3200 , 5.0400", "statut": "Projet approuvé", "emr_dt": "2026-09-01"},
+        {"sta_nm_anfr": "0212750525", "adm_lb_nom": "ORANGE", "generation": "4G", "emr_lb_systeme": "LTE 2600",
+         "coordonnees": "47.3200 , 5.0400", "statut": "En service"},
+        {"sta_nm_anfr": "0219999999", "adm_lb_nom": "SFR", "generation": "4G", "coordonnees": "47.90 , 4.50"},  # hors rayon
+    ]
+    stations, date = a.group_registry(recs)
+    assert [s.id for s in stations] == ["0212750525"] and date == "2026-10-29"
+    st = stations[0]
+    assert st.height == 30.5 and [o.name for o in st.operators] == ["Bouygues Telecom", "Orange"]
+    bouygues = st.operators[0]
+    assert bouygues.generations == ["4G", "5G"] and bouygues.status == "En service" and bouygues.latest == "2026-09-01"
+    outages = a.parse_outages({"features": [
+        {"properties": {"operateur": "Bouygues Telecom", "departement": "21 ", "station_anfr": "0212750525", "voix": "HS",
+                        "data": "HS", "data4g": "HS", "raison": "MAINT", "detail": "Maintenance en cours", "fin": "2026-11-18"}},
+        {"properties": {"operateur": "Orange", "departement": "75 ", "station_anfr": "0752290000", "raison": "INT"}},
+    ]})
+    assert list(outages) == ["0212750525"] and outages["0212750525"][0].kind == "maintenance"

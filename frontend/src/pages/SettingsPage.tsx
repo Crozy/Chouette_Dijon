@@ -9,7 +9,7 @@ import type { SourceMeta } from '../types'
 const LAYERS: [LayerKey, string, string][] = [
   ['train', 'Trains', 'rgb(var(--c-ink))'], ['tram', 'Trams', '#AB0672'], ['bus', 'Bus', '#EA619F'],
   ['velo', 'Vélos Vélodi', 'rgb(var(--c-live))'], ['flixbus', 'FlixBus', '#73D700'], ['blablacar', 'BlaBlaCar', '#2D9CDB'],
-  ['culture', 'Salles & lieux', '#8E2442'], ['traffic', 'Circulation', '#FF9F0A'], ['crowd', 'Affluence (estimation)', '#FF5E3A'],
+  ['culture', 'Salles & lieux', '#8E2442'], ['antennas', 'Antennes mobiles', '#8B5CF6'], ['traffic', 'Circulation', '#FF9F0A'], ['crowd', 'Affluence (estimation)', '#FF5E3A'],
 ]
 
 /** Aperçu miniature d'un thème (indépendant du thème courant). */

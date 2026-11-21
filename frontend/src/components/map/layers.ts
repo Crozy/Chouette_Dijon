@@ -1,7 +1,7 @@
 /** Couches MapLibre de la carte (fonctions pures, sans état React). */
 import maplibregl from 'maplibre-gl'
 import type { LayerKey } from '../../settings'
-import type { CrowdData, LineShape, TrafficInfo, TransitStop } from '../../types'
+import type { AntennaData, CrowdData, LineShape, TrafficInfo, TransitStop } from '../../types'
 
 export const CENTER: [number, number] = [5.0415, 47.322]
 
@@ -21,6 +21,7 @@ export const FILTERS: { key: LayerKey; label: string; color: string }[] = [
   { key: 'flixbus', label: 'FlixBus', color: '#73D700' },
   { key: 'blablacar', label: 'BlaBlaCar', color: '#2D9CDB' },
   { key: 'culture', label: 'Salles & lieux', color: '#8E2442' },
+  { key: 'antennas', label: 'Antennes', color: '#8B5CF6' },
   { key: 'traffic', label: 'Circulation', color: '#FF9F0A' },
   { key: 'crowd', label: 'Affluence (estimée)', color: '#FF5E3A' },
 ]
@@ -260,4 +261,60 @@ export function applyLineState(map: maplibregl.Map, layers: Record<LayerKey, boo
   for (const id of LINE_LAYERS) {
     map.setPaintProperty(id, 'line-opacity', route ? 0.15 : id === 'bus-lines' ? 0.6 : 0.85)
   }
+}
+
+// ---------- Antennes mobiles (registre ANFR + pannes Arcep) ----------
+export interface AntennaLayerFilter {
+  ops: string[]
+  gens: string[]
+  outagesOnly: boolean
+}
+
+export function addAntennas(map: maplibregl.Map, data: AntennaData | null) {
+  if (!data) return
+  const fc: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: data.stations.map((s) => {
+      const kind = s.outages.some((o) => o.kind === 'incident') ? 'incident' : s.outages.length ? 'maintenance' : ''
+      return {
+        type: 'Feature',
+        properties: {
+          id: s.id,
+          n: s.operators.length,
+          has5g: s.operators.some((o) => o.generations.includes('5G')),
+          outage: kind,
+          // « |Orange:4G,5G|Free:4G| » : permet de filtrer par opérateur ET génération
+          combo: `|${s.operators.flatMap((o) => o.generations.map((g) => `${o.name}:${g}`)).join('|')}|`,
+        },
+        geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+      }
+    }),
+  }
+  const src = map.getSource('antennas') as maplibregl.GeoJSONSource | undefined
+  if (src) {
+    src.setData(fc)
+    return
+  }
+  map.addSource('antennas', { type: 'geojson', data: fc })
+  map.addLayer({
+    id: 'antennas', type: 'circle', source: 'antennas', minzoom: 10,
+    layout: { 'circle-sort-key': ['match', ['get', 'outage'], 'incident', 2, 'maintenance', 1, 0], visibility: 'none' },
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, ['+', 1.5, ['*', 0.5, ['get', 'n']]], 15, ['+', 3, ['*', 1.6, ['get', 'n']]]],
+      'circle-color': ['match', ['get', 'outage'], 'incident', '#DC2626', 'maintenance', '#F59E0B', '#64748B'],
+      'circle-stroke-color': ['case', ['get', 'has5g'], '#8B5CF6', '#FFFFFF'],
+      'circle-stroke-width': ['case', ['get', 'has5g'], 2, 1],
+      'circle-opacity': 0.9,
+    },
+  }, overlayBefore(map))
+}
+
+export function applyAntennaState(map: maplibregl.Map, visible: boolean, f: AntennaLayerFilter) {
+  if (!map.getLayer('antennas')) return
+  map.setLayoutProperty('antennas', 'visibility', visible ? 'visible' : 'none')
+  const combos = f.ops.flatMap((o) => f.gens.map((g) => ['in', `|${o}:${g}|`, ['get', 'combo']] as maplibregl.ExpressionSpecification))
+  const filter: maplibregl.FilterSpecification = combos.length
+    ? ['all', ['any', ...combos], f.outagesOnly ? ['!=', ['get', 'outage'], ''] : true]
+    : ['==', ['get', 'id'], '\u0000']
+  map.setFilter('antennas', filter)
 }

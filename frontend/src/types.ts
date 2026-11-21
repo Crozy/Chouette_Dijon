@@ -224,6 +224,44 @@ export interface Infos {
   numbers: { label: string; number: string; emergency: boolean }[]
 }
 
+export interface AntennaOperator {
+  name: string
+  generations: string[]
+  systems: string[]
+  status?: string | null
+  latest?: string | null
+}
+
+export interface AntennaOutage {
+  operator: string
+  kind: 'incident' | 'maintenance'
+  voice?: string | null
+  data?: string | null
+  techs: Record<string, string>
+  detail?: string | null
+  start?: string | null
+  end?: string | null
+  commune?: string | null
+}
+
+export interface AntennaStation {
+  id: string
+  lat: number
+  lon: number
+  height?: number | null
+  address?: string | null
+  postcode?: string | null
+  insee?: string | null
+  operators: AntennaOperator[]
+  outages: AntennaOutage[]
+}
+
+export interface AntennaData {
+  stations: AntennaStation[]
+  registry_date?: string | null
+  outages_date?: string | null
+}
+
 export interface TrafficInfo {
   mode: 'live' | 'estimated'
   level: number

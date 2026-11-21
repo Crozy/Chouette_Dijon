@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, CloudSun, Newspaper, SlidersHorizontal, TramFront, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { CalendarDays, CloudSun, Newspaper, RadioTower, SlidersHorizontal, TramFront, TriangleAlert, type LucideIcon } from 'lucide-react'
 
 /** Panneaux affichables par-dessus la carte (un seul à la fois). */
 /** `lieu:<id>` = programmation d'une salle (adresse #/lieu/<id>) */
-export type FixedPanel = 'transports' | 'actus' | 'meteo' | 'agenda' | 'infos' | 'gare' | 'cars'
+export type FixedPanel = 'transports' | 'actus' | 'meteo' | 'agenda' | 'infos' | 'antennes' | 'gare' | 'cars'
 export type PanelId = FixedPanel | `lieu:${string}`
 
 /** Entrées du rail d'icônes. « settings » quitte la carte pour la page Paramètres. */
@@ -13,12 +13,13 @@ export const RAIL: { id: PanelId | 'settings'; label: string; icon: LucideIcon }
   { id: 'meteo', label: 'Météo', icon: CloudSun },
   { id: 'agenda', label: 'Agenda', icon: CalendarDays },
   { id: 'infos', label: 'Infos & Urgences', icon: TriangleAlert },
+  { id: 'antennes', label: 'Antennes', icon: RadioTower },
   { id: 'settings', label: 'Paramètres', icon: SlidersHorizontal },
 ]
 
 export const PANEL_TITLES: Record<FixedPanel, string> = {
   transports: 'Transports', actus: 'Actualités', meteo: 'Météo', agenda: 'Agenda', infos: 'Infos & Urgences',
-  gare: 'Gare SNCF', cars: 'Gare routière',
+  antennes: 'Antennes mobiles', gare: 'Gare SNCF', cars: 'Gare routière',
 }
 
 const PANELS = Object.keys(PANEL_TITLES) as FixedPanel[]

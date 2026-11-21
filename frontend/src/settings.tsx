@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 export type Skin = 'tech' | 'bourgogne'
 export type Mode = 'dark' | 'light'
-export type LayerKey = 'train' | 'tram' | 'bus' | 'velo' | 'flixbus' | 'blablacar' | 'culture' | 'traffic' | 'crowd'
+export type LayerKey = 'train' | 'tram' | 'bus' | 'velo' | 'flixbus' | 'blablacar' | 'culture' | 'antennas' | 'traffic' | 'crowd'
 
 export interface Settings {
   skin: Skin
@@ -16,7 +16,7 @@ const DEFAULTS: Settings = {
   mode: 'dark',
   refreshSec: 15,
   // Affichage sobre par défaut : l'essentiel (trams, gares, salles) ; le reste s'active depuis les filtres
-  layers: { train: true, tram: true, bus: false, velo: false, flixbus: true, blablacar: false, culture: true, traffic: false, crowd: false },
+  layers: { train: true, tram: true, bus: false, velo: false, flixbus: true, blablacar: false, culture: true, antennas: false, traffic: false, crowd: false },
 }
 const KEY = 'dijonhub.settings'
 /** À incrémenter quand les couches par défaut changent : les anciens choix enregistrés sont alors réinitialisés. */

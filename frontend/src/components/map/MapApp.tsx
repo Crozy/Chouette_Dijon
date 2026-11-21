@@ -6,13 +6,13 @@ import { usePolling } from '../../hooks/usePolling'
 import { dayLong, hhmm } from '../../format'
 import { CATEGORY_COLOR, CATEGORY_LABEL } from '../../pages/shared'
 import type {
-  ApiResponse, BoardEntry, CrowdData, HubEvent, LineShape, Venue, MeetingPoint, TrafficInfo, TransitStop, Vehicle, VelodiStation,
+  AntennaData, AntennaStation, ApiResponse, BoardEntry, CrowdData, HubEvent, LineShape, Venue, MeetingPoint, TrafficInfo, TransitStop, Vehicle, VelodiStation,
 } from '../../types'
 import { EventImage, SourceBadge } from '../ui'
 import { StationBoard } from '../StationBoard'
 import { JourneyPanel } from '../JourneyPanel'
 import {
-  CENTER, FILTERS, STOP_LAYERS, TRAFFIC_COLORS, addCrowd, addLines, addStops, addTraffic, applyLineState,
+  CENTER, FILTERS, STOP_LAYERS, TRAFFIC_COLORS, addAntennas, addCrowd, addLines, addStops, addTraffic, applyAntennaState, applyLineState,
   applyOverlayState, styleUrl, type RouteRef,
 } from './layers'
 import { UI, useIsMobile, type PanelId } from './nav'
@@ -25,6 +25,7 @@ import { WeatherPanel } from './panels/WeatherPanel'
 import { EventsPanel } from './panels/EventsPanel'
 import { InfosPanel } from './panels/InfosPanel'
 import { VenuePanel } from './panels/VenuePanel'
+import { AntennasPanel, GENERATIONS, OPERATORS, type AntennaFilter } from './panels/AntennasPanel'
 
 /** Icône du tram rose de Dijon (public/tram-dijon.svg). */
 const TRAM_ICON = `<img class="mk-tram-icon" src="/tram-dijon.svg" alt="" draggable="false" />`
@@ -57,6 +58,26 @@ interface Tracked {
   el: HTMLElement
   from: [number, number]
   to: [number, number]
+}
+
+const frShort = (iso?: string | null) =>
+  iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : ''
+
+/** Fiche d'une antenne : opérateurs, technologies, statut, pannes déclarées. */
+function antennaCard(st: AntennaStation): Selected {
+  const ops = st.operators.map((o) => {
+    const five = o.systems.filter((s) => s.startsWith('5G')).map((s) => s.replace('5G NR ', ''))
+    const status = o.status && o.status !== 'En service' ? ` (${o.status.toLowerCase()})` : ''
+    return `${o.name} : ${o.generations.join(' · ')}${five.length ? ` — 5G ${five.join('/')} MHz` : ''}${status}`
+  })
+  const outages = st.outages.map((o) =>
+    `⚠ ${o.operator} : ${o.kind === 'incident' ? 'incident' : 'maintenance'} — voix ${o.voice ?? '?'}, data ${o.data ?? '?'}${o.end ? `, fin prévue le ${frShort(o.end)}` : ''}`)
+  return {
+    id: `antenna-${st.id}`,
+    kind: `Antenne · ${st.operators.length} opérateur${st.operators.length > 1 ? 's' : ''}`,
+    title: st.address ?? `Station ${st.id}`,
+    lines: [...outages, ...ops, [st.height ? `Hauteur ${st.height} m` : '', `Station ANFR ${st.id}`].filter(Boolean).join(' · ')],
+  }
 }
 
 function veloColor(s: VelodiStation) {
@@ -102,6 +123,13 @@ export function MapApp({ panel, onPanel, onSettings }: {
   const traffic = usePolling<ApiResponse<TrafficInfo>>('/api/transports/traffic', 60000)
   const crowd = usePolling<ApiResponse<CrowdData>>('/api/transports/crowd', 120000)
   const venues = usePolling<ApiResponse<Venue[]>>('/api/events/venues', 1800000)
+  // Antennes : chargées seulement quand la couche ou la section est affichée
+  const wantAntennas = layers.antennas || panel === 'antennes'
+  const antennas = usePolling<ApiResponse<AntennaData>>(wantAntennas ? '/api/transports/antennas' : null, 3600000)
+  const antennasRef = useRef<AntennaData | null>(null)
+  const [antennaFilter, setAntennaFilter] = useState<AntennaFilter>({ ops: [...OPERATORS], gens: [...GENERATIONS], outagesOnly: false })
+  const antennaFilterRef = useRef(antennaFilter)
+  antennaFilterRef.current = antennaFilter
   const trafficRef = useRef<TrafficInfo | null>(null)
   const crowdRef = useRef<CrowdData | null>(null)
   const darkRef = useRef(mode === 'dark')
@@ -130,6 +158,8 @@ export function MapApp({ panel, onPanel, onSettings }: {
       addTraffic(map, trafficRef.current, darkRef.current)
       addCrowd(map, crowdRef.current)
       applyOverlayState(map, layersRef.current)
+      addAntennas(map, antennasRef.current)
+      applyAntennaState(map, layersRef.current.antennas, antennaFilterRef.current)
       addLines(map, shapesRef.current)
       addStops(map, stopsRef.current)
       applyLineState(map, layersRef.current, routeRef.current)
@@ -146,6 +176,14 @@ export function MapApp({ panel, onPanel, onSettings }: {
     })
     map.on('mouseenter', 'crowd-zones', () => { map.getCanvas().style.cursor = 'pointer' })
     map.on('mouseleave', 'crowd-zones', () => { map.getCanvas().style.cursor = '' })
+    // Clic sur une antenne
+    map.on('click', 'antennas', (e) => {
+      const id = e.features?.[0]?.properties?.id as string | undefined
+      const st = antennasRef.current?.stations.find((s) => s.id === id)
+      if (st) setSelected(antennaCard(st))
+    })
+    map.on('mouseenter', 'antennas', () => { map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', 'antennas', () => { map.getCanvas().style.cursor = '' })
     // Clic sur un arrêt (couches dessinées dans le canevas, pas des marqueurs DOM)
     for (const id of STOP_LAYERS) {
       map.on('click', id, (e) => {
@@ -216,6 +254,26 @@ export function MapApp({ panel, onPanel, onSettings }: {
     const map = mapRef.current
     if (map && styleReady.current) applyOverlayState(map, layers)
   }, [layers])
+
+  // --- Antennes mobiles
+  useEffect(() => {
+    antennasRef.current = antennas.data?.data ?? null
+    const map = mapRef.current
+    if (map && styleReady.current) {
+      addAntennas(map, antennasRef.current)
+      applyAntennaState(map, layers.antennas, antennaFilter)
+    }
+  }, [antennas.data]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (map && styleReady.current) applyAntennaState(map, layers.antennas, antennaFilter)
+  }, [layers.antennas, antennaFilter])
+
+  // Ouvrir la section « Antennes » affiche la couche
+  useEffect(() => {
+    if (panel === 'antennes' && !layers.antennas) update({ layers: { ...layers, antennas: true } })
+  }, [panel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- Arrêts de tram et de bus
   useEffect(() => {
@@ -480,6 +538,14 @@ export function MapApp({ panel, onPanel, onSettings }: {
     return () => window.removeEventListener('keydown', onKey)
   }, [train, panel, selected, onPanel])
 
+  const focusAntenna = (st: AntennaStation) => {
+    setSelected(antennaCard(st))
+    const padding = mobile
+      ? { top: UI.top + 50, bottom: Math.min(window.innerHeight * 0.62, 560) + UI.rail, left: 20, right: 20 }
+      : { top: UI.top + 50, bottom: 40, left: freeLeft, right: 60 }
+    mapRef.current?.flyTo({ center: [st.lon, st.lat], zoom: 15, padding, duration: 900 })
+  }
+
   const toggle = (id: PanelId) => onPanel(panel === id ? null : id)
   const close = () => onPanel(null)
   const showLegends = !(mobile && (panel || selected))
@@ -533,6 +599,15 @@ export function MapApp({ panel, onPanel, onSettings }: {
               <span className="text-muted">{traffic.data.data.label}{traffic.data.data.mode !== 'live' ? ' · seuls les axes chargés sont colorés' : ''}</span>
             </span>
           )}
+          {layers.antennas && antennas.data && (
+            <span className="flex items-center gap-1.5 bg-surface/90 border border-line rounded-full px-2 py-0.5"
+              title="Registre ANFR (hebdomadaire) et pannes déclarées à l'Arcep (quotidien, pas de temps réel)">
+              Antennes <SourceBadge meta={antennas.data.meta} />
+              <span className="text-muted">
+                {antennas.data.data.stations.length} stations · pannes du {antennas.data.data.outages_date ? new Date(`${antennas.data.data.outages_date}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'numeric' }) : '—'}
+              </span>
+            </span>
+          )}
           {layers.crowd && crowd.data && (
             <span className="flex items-center gap-1.5 bg-surface/90 border border-line rounded-full px-2 py-0.5" title={crowd.data.data.method}>
               Affluence <span className="font-mono text-[10px] font-bold uppercase text-sim">Estimation</span>
@@ -559,6 +634,10 @@ export function MapApp({ panel, onPanel, onSettings }: {
           selectedId={selected?.id.startsWith('event-') ? selected.id.slice(6) : null} />
       )}
       {panel === 'infos' && <InfosPanel onClose={close} style={panelStyle} />}
+      {panel === 'antennes' && (
+        <AntennasPanel onClose={close} style={panelStyle} data={antennas.data} filter={antennaFilter}
+          onFilter={setAntennaFilter} onFocus={focusAntenna} />
+      )}
       {panel?.startsWith('lieu:') && (
         <VenuePanel key={panel} venueId={panel.slice(5)} venue={venues.data?.data.find((v) => v.id === panel.slice(5)) ?? null}
           onClose={close} style={panelStyle} />

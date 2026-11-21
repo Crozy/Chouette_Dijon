@@ -3,8 +3,8 @@ from typing import Literal, Optional
 
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 
-from app.models import ApiResponse, Board, BoardEntry, CrowdData, Journey, TrafficInfo, LineShape, MeetingPoint, TransitStop, VelodiStation, Vehicle
-from app.services import coach, crowd, gtfs_rt, gtfs_static, registry, sncf, traffic, velodi
+from app.models import AntennaData, ApiResponse, Board, BoardEntry, CrowdData, Journey, TrafficInfo, LineShape, MeetingPoint, TransitStop, VelodiStation, Vehicle
+from app.services import antennas, coach, crowd, gtfs_rt, gtfs_static, registry, sncf, traffic, velodi
 
 router = APIRouter(prefix="/api/transports", tags=["transports"])
 
@@ -66,6 +66,13 @@ async def traffic_tile(z: int = Path(..., ge=0, le=22), x: int = Path(..., ge=0)
     if tile is None:
         raise HTTPException(404, "Circulation temps réel indisponible")
     return Response(tile, media_type="image/png", headers={"Cache-Control": "public, max-age=120"})
+
+
+@router.get("/antennas", response_model=ApiResponse[AntennaData])
+async def antennas_map():
+    """Antennes mobiles (registre ANFR, hebdomadaire) et pannes déclarées (Arcep, quotidien) autour de Dijon."""
+    data = await antennas.get_antennas()
+    return ApiResponse(meta=registry.get("antennes"), data=data)
 
 
 @router.get("/crowd", response_model=ApiResponse[CrowdData])

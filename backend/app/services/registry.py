@@ -20,6 +20,8 @@ SOURCES: dict[str, str] = {
     "traffic": "Circulation (TomTom)",
     "crowd": "Affluence (estimation)",
     "venues": "Programmation des salles (Vapeur, Zénith, DFCO)",
+    "antennes": "Antennes mobiles (ANFR)",
+    "antennes_pannes": "Pannes d'antennes (Arcep)",
 }
 
 _state: dict[str, SourceMeta] = {}
