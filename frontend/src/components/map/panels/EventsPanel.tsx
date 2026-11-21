@@ -21,9 +21,15 @@ export function EventsPanel({ onClose, style, className, onLocate, selectedId }:
   const limit = Date.now() + range * 86400000 + 86400000
   const events = (data?.data ?? []).filter((e) => (cat === 'all' || e.category === cat) && new Date(e.start).getTime() <= limit)
   const cats = ['all', ...Object.keys(CATEGORY_LABEL)] as ('all' | EventCategory)[]
+  // Programmation officielle (Vapeur, Zénith, stade) mêlée à l'agenda général : le dire clairement
+  const mixed = data?.meta.status !== 'live' && (data?.data ?? []).some((e) => e.source_status === 'live')
+  const subtitle = mixed
+    ? 'Vapeur, Zénith, stade : programmes officiels · autres lieux : agenda de démonstration'
+    : 'Sorties culturelles et sportives · OpenAgenda'
 
   return (
-    <Panel title="Agenda" subtitle="Sorties culturelles et sportives · OpenAgenda" meta={data?.meta} onClose={onClose} style={style} className={className}>
+    <Panel title="Agenda" subtitle={subtitle} meta={mixed ? null : data?.meta} status={mixed ? 'live' : undefined}
+      onClose={onClose} style={style} className={className}>
       <div className="flex border border-line rounded-lg overflow-hidden" role="group" aria-label="Période">
         {RANGES.map(([k, l]) => (
           <button key={k} type="button" aria-pressed={range === k} onClick={() => setRange(k)}

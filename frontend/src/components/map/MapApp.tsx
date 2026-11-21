@@ -468,6 +468,18 @@ export function MapApp({ panel, onPanel, onSettings }: {
     ? { ...panelStyle, zIndex: 35 }
     : { left: panelLeft + UI.panel + UI.gap, top: UI.top, bottom: UI.gap, width: UI.journey, maxWidth: `calc(100vw - ${panelLeft + UI.panel + UI.gap * 2}px)` }
 
+  // Agenda : cadrer la carte sur toutes les salles (certaines, au nord, sortaient du cadre)
+  useEffect(() => {
+    const map = mapRef.current
+    const vs = venues.data?.data
+    if (panel !== 'agenda' || !map || !vs?.length) return
+    const b = vs.reduce((acc, v) => acc.extend([v.lon, v.lat]), new maplibregl.LngLatBounds([vs[0].lon, vs[0].lat], [vs[0].lon, vs[0].lat]))
+    const padding = mobile
+      ? { top: UI.top + 60, bottom: Math.min(window.innerHeight * 0.62, 560) + UI.rail + 20, left: 30, right: 30 }
+      : { top: UI.top + 90, bottom: 60, left: freeLeft + 40, right: 80 }
+    map.fitBounds(b, { padding, maxZoom: 14, duration: 800 })
+  }, [panel, venues.data]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const selectLine = (l: ActiveLine) => {
     if (selected?.id === `line-${l.line}`) {
       setSelected(null)
