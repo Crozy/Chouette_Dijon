@@ -158,8 +158,8 @@ export function MapApp({ panel, onPanel, onSettings }: {
       addTraffic(map, trafficRef.current, darkRef.current)
       addCrowd(map, crowdRef.current)
       applyOverlayState(map, layersRef.current)
-      addAntennas(map, antennasRef.current)
-      applyAntennaState(map, layersRef.current.antennas, antennaFilterRef.current)
+      addAntennas(map, antennasRef.current, antennaFilterRef.current)
+      applyAntennaState(map, layersRef.current.antennas)
       addLines(map, shapesRef.current)
       addStops(map, stopsRef.current)
       applyLineState(map, layersRef.current, routeRef.current)
@@ -260,14 +260,17 @@ export function MapApp({ panel, onPanel, onSettings }: {
     antennasRef.current = antennas.data?.data ?? null
     const map = mapRef.current
     if (map && styleReady.current) {
-      addAntennas(map, antennasRef.current)
-      applyAntennaState(map, layers.antennas, antennaFilter)
+      addAntennas(map, antennasRef.current, antennaFilter)
+      applyAntennaState(map, layers.antennas)
     }
   }, [antennas.data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const map = mapRef.current
-    if (map && styleReady.current) applyAntennaState(map, layers.antennas, antennaFilter)
+    if (map && styleReady.current) {
+      addAntennas(map, antennasRef.current, antennaFilter)
+      applyAntennaState(map, layers.antennas)
+    }
   }, [layers.antennas, antennaFilter])
 
   // Ouvrir une section du rail met ses couches en avant (Transports → transports, Antennes → antennes…).

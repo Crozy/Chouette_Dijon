@@ -270,51 +270,74 @@ export interface AntennaLayerFilter {
   outagesOnly: boolean
 }
 
-export function addAntennas(map: maplibregl.Map, data: AntennaData | null) {
-  if (!data) return
-  const fc: GeoJSON.FeatureCollection = {
-    type: 'FeatureCollection',
-    features: data.stations.map((s) => {
-      const kind = s.outages.some((o) => o.kind === 'incident') ? 'incident' : s.outages.length ? 'maintenance' : ''
-      return {
-        type: 'Feature',
-        properties: {
-          id: s.id,
-          n: s.operators.length,
-          has5g: s.operators.some((o) => o.generations.includes('5G')),
-          outage: kind,
-          // « |Orange:4G,5G|Free:4G| » : permet de filtrer par opérateur ET génération
-          combo: `|${s.operators.flatMap((o) => o.generations.map((g) => `${o.name}:${g}`)).join('|')}|`,
-        },
-        geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
-      }
-    }),
+/** Couleur de chaque opérateur ; une antenne partagée est dessinée en anneaux concentriques. */
+export const OPERATOR_COLORS: Record<string, string> = {
+  Orange: '#FF7900', SFR: '#E2001A', 'Bouygues Telecom': '#0072CE', Free: '#FFFFFF',
+}
+const OPERATOR_ORDER = ['Orange', 'SFR', 'Bouygues Telecom', 'Free']
+const RING_IDS = ['antennas', 'antennas-1', 'antennas-2', 'antennas-3'] as const
+const ANTENNA_IDS = ['antennas-alert', ...RING_IDS] as const
+const RING_SCALE = [1, 0.72, 0.48, 0.26]
+
+function antennaFeatures(data: AntennaData, f: AntennaLayerFilter): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = []
+  for (const s of data.stations) {
+    if (f.outagesOnly && s.outages.length === 0) continue
+    // Opérateurs retenus par les filtres (opérateur coché ET au moins une génération cochée)
+    const ops = s.operators
+      .filter((o) => f.ops.includes(o.name) && o.generations.some((g) => f.gens.includes(g)))
+      .sort((a, b) => OPERATOR_ORDER.indexOf(a.name) - OPERATOR_ORDER.indexOf(b.name))
+    if (!ops.length) continue
+    const props: Record<string, unknown> = {
+      id: s.id,
+      has5g: ops.some((o) => o.generations.includes('5G')),
+      outage: s.outages.some((o) => o.kind === 'incident') ? 'incident' : s.outages.length ? 'maintenance' : '',
+    }
+    ops.forEach((o, i) => { props[`c${i}`] = OPERATOR_COLORS[o.name] ?? '#94A3B8' })
+    features.push({ type: 'Feature', properties: props, geometry: { type: 'Point', coordinates: [s.lon, s.lat] } })
   }
+  return { type: 'FeatureCollection', features }
+}
+
+/** Crée ou met à jour les couches d'antennes selon les filtres (opérateurs, générations, pannes). */
+export function addAntennas(map: maplibregl.Map, data: AntennaData | null, f: AntennaLayerFilter) {
+  if (!data) return
+  const fc = antennaFeatures(data, f)
   const src = map.getSource('antennas') as maplibregl.GeoJSONSource | undefined
   if (src) {
     src.setData(fc)
     return
   }
   map.addSource('antennas', { type: 'geojson', data: fc })
+  // Rayon selon le zoom (une expression « zoom » doit rester au premier niveau : on multiplie chaque palier)
+  const radius = (k: number): maplibregl.ExpressionSpecification => ['interpolate', ['linear'], ['zoom'], 10, 3.5 * k, 13, 5.5 * k, 16, 10 * k]
+  const before = overlayBefore(map)
+  // Panne : cercle autour du point (rouge = incident, jaune = maintenance)
   map.addLayer({
-    id: 'antennas', type: 'circle', source: 'antennas', minzoom: 10,
-    layout: { 'circle-sort-key': ['match', ['get', 'outage'], 'incident', 2, 'maintenance', 1, 0], visibility: 'none' },
+    id: 'antennas-alert', type: 'circle', source: 'antennas', minzoom: 10, filter: ['!=', ['get', 'outage'], ''],
+    layout: { visibility: 'none' },
     paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, ['+', 1.5, ['*', 0.5, ['get', 'n']]], 15, ['+', 3, ['*', 1.6, ['get', 'n']]]],
-      'circle-color': ['match', ['get', 'outage'], 'incident', '#DC2626', 'maintenance', '#F59E0B', '#64748B'],
-      'circle-stroke-color': ['case', ['get', 'has5g'], '#8B5CF6', '#FFFFFF'],
-      'circle-stroke-width': ['case', ['get', 'has5g'], 2, 1],
-      'circle-opacity': 0.9,
+      'circle-radius': radius(1.9), 'circle-color': 'rgba(0,0,0,0)',
+      'circle-stroke-width': 3, 'circle-stroke-color': ['match', ['get', 'outage'], 'incident', '#DC2626', '#FACC15'],
     },
-  }, overlayBefore(map))
+  }, before)
+  RING_IDS.forEach((id, i) => {
+    map.addLayer({
+      id, type: 'circle', source: 'antennas', minzoom: 10, filter: ['has', `c${i}`],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': radius(RING_SCALE[i]),
+        'circle-color': ['get', `c${i}`],
+        // Anneau extérieur : liseré violet si la 5G est présente ; fin trait sombre pour détacher les couleurs (dont le blanc de Free)
+        'circle-stroke-color': i === 0 ? ['case', ['get', 'has5g'], '#8B5CF6', '#111827'] : '#111827',
+        'circle-stroke-width': i === 0 ? ['case', ['get', 'has5g'], 2, 1] : 0.6,
+      },
+    }, before)
+  })
 }
 
-export function applyAntennaState(map: maplibregl.Map, visible: boolean, f: AntennaLayerFilter) {
-  if (!map.getLayer('antennas')) return
-  map.setLayoutProperty('antennas', 'visibility', visible ? 'visible' : 'none')
-  const combos = f.ops.flatMap((o) => f.gens.map((g) => ['in', `|${o}:${g}|`, ['get', 'combo']] as maplibregl.ExpressionSpecification))
-  const filter: maplibregl.FilterSpecification = combos.length
-    ? ['all', ['any', ...combos], f.outagesOnly ? ['!=', ['get', 'outage'], ''] : true]
-    : ['==', ['get', 'id'], '\u0000']
-  map.setFilter('antennas', filter)
+export function applyAntennaState(map: maplibregl.Map, visible: boolean) {
+  for (const id of ANTENNA_IDS) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none')
+  }
 }

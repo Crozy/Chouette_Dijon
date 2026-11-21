@@ -2,13 +2,11 @@ import { AlertTriangle } from 'lucide-react'
 import type { AntennaData, AntennaStation, ApiResponse } from '../../../types'
 import { Skeleton, SourceBadge } from '../../ui'
 import { Panel } from '../Panel'
+import { OPERATOR_COLORS as OPERATOR_COLOR } from '../layers'
 import type { PanelProps } from './types'
 
 export const OPERATORS = ['Orange', 'SFR', 'Bouygues Telecom', 'Free'] as const
 export const GENERATIONS = ['2G', '3G', '4G', '5G'] as const
-export const OPERATOR_COLOR: Record<string, string> = {
-  Orange: '#FF7900', SFR: '#E2001A', 'Bouygues Telecom': '#009BDE', Free: '#9AA0A6',
-}
 
 export interface AntennaFilter {
   ops: string[]
@@ -81,12 +79,21 @@ export function AntennasPanel({ onClose, style, className, data, filter, onFilte
           <section className="inner p-3 flex flex-col gap-1.5" aria-label="Légende">
             <h3 className="m-0 text-sm font-semibold">Légende</h3>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] text-ink2">
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#64748B] border border-white" />Antenne</span>
+              {OPERATORS.map((o) => (
+                <span key={o} className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full border border-[#111827]" style={{ background: OPERATOR_COLOR[o] }} />{o}
+                </span>
+              ))}
+              <span className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full border border-[#111827] flex items-center justify-center" style={{ background: OPERATOR_COLOR.Orange }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: OPERATOR_COLOR.Free }} />
+                </span>Antenne partagée
+              </span>
               <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#64748B] border-2 border-[#8B5CF6]" />avec 5G</span>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#DC2626]" />Incident</span>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#F59E0B]" />Maintenance</span>
+              <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full border-[3px] border-[#DC2626]" />Incident</span>
+              <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full border-[3px] border-[#FACC15]" />Maintenance</span>
             </div>
-            <span className="text-[11px] text-muted">Plus le point est gros, plus la station accueille d'opérateurs.</span>
+            <span className="text-[11px] text-muted">Une antenne partagée par plusieurs opérateurs est dessinée en anneaux, un par opérateur.</span>
           </section>
 
           <section className="flex flex-col gap-2" aria-label="Pannes déclarées">
